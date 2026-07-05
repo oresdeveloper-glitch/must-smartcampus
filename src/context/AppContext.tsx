@@ -3,7 +3,7 @@ import type { User, UserRole, Announcement, Note, Assignment, Chat, ChatMessage,
 
 function safeJSON<T>(raw: string | null, fallback: T): T {
   if (raw === null) return fallback;
-  try { return JSON.parse(raw); } catch { return fallback; }
+  try { const v = JSON.parse(raw); return v === null ? fallback : v; } catch { return fallback; }
 }
 
 const STORAGE_KEYS = {

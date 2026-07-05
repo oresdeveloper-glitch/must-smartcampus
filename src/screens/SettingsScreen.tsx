@@ -47,7 +47,7 @@ export default function SettingsScreen() {
     {
       title: 'Data & Storage',
       items: [
-        { icon: Download, label: 'Downloaded Notes', right: <span className="text-sm text-gray-400">124 MB</span>, action: () => { const notes = JSON.parse(localStorage.getItem('smartlecture_notes') || '[]'); if (notes.length === 0) { alert('No downloaded notes found.'); } else { alert(`${notes.length} note(s) downloaded. Latest: ${notes[notes.length-1].title}`); } } },
+        { icon: Download, label: 'Downloaded Notes', right: <span className="text-sm text-gray-400">124 MB</span>, action: () => { try { const notes = JSON.parse(localStorage.getItem('smartlecture_notes') || '[]'); if (notes.length === 0) { alert('No downloaded notes found.'); } else { alert(`${notes.length} note(s) downloaded. Latest: ${notes[notes.length-1].title}`); } } catch { alert('Could not load notes data.'); } } },
         { icon: Download, label: 'Clear Cache', right: <span className="text-sm text-gray-400">45 MB</span>, action: () => { localStorage.removeItem('smartlecture_user'); localStorage.removeItem('smartlecture_creds'); localStorage.removeItem('darkMode'); alert('Cache cleared! You may need to sign in again.'); } },
       ],
     },

@@ -29,7 +29,7 @@ export default function AssignmentScreen() {
 
   const filtered = assignments.filter(a => {
     if (filter === 'pending') return !a.submitted;
-    if (filter === 'submitted') return a.submitted && !a.grade;
+    if (filter === 'submitted') return a.submitted && a.grade === undefined;
     if (filter === 'graded') return a.grade !== undefined;
     return true;
   });

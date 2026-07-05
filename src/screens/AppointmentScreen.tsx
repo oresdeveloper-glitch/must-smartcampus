@@ -227,7 +227,7 @@ export default function AppointmentScreen() {
                 </div>
 
                 {/* Actions — only the assigned lecturer can confirm/cancel */}
-                {user?.role === 'lecturer' && user.name === apt.lecturerName && (
+                {user?.role === 'lecturer' && user?.name === apt.lecturerName && (
                   <div className="relative flex-shrink-0">
                     <button onClick={() => setOpenMenuId(openMenuId === apt.id ? null : apt.id)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
                       <ChevronDown className="w-4 h-4" />

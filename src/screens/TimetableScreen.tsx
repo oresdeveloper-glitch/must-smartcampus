@@ -36,7 +36,7 @@ export default function TimetableScreen() {
 
   const getColorForCourse = (courseId: string) => {
     const idx = timetable.findIndex(t => t.courseId === courseId);
-    return courseColors[idx % courseColors.length];
+    return idx === -1 ? courseColors[0] : courseColors[idx % courseColors.length];
   };
 
   const getSlotSpan = (start: string, end: string) => {

@@ -162,7 +162,7 @@ export default function ChatDetailScreen() {
                   {/* Avatar column */}
                   <div className="w-7 flex-shrink-0 self-end">
                     {!isMine && showAvatar && (
-                      <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold', avatarColor(msg.senderName))}>
+                      <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold', avatarColor(msg.senderName || '?'))}>
                         {(msg.senderName || '?').charAt(0).toUpperCase()}
                       </div>
                     )}

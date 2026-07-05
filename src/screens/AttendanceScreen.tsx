@@ -169,7 +169,7 @@ export default function AttendanceScreen() {
               const StatusIcon = record.status === 'present' ? CheckCircle : record.status === 'late' ? Clock : record.status === 'absent' ? XCircle : AlertCircle;
               const statusColor = record.status === 'present' ? 'text-green-500' : record.status === 'late' ? 'text-orange-500' : record.status === 'absent' ? 'text-red-500' : 'text-blue-500';
               return (
-                <div key={record.id} className={cn('flex items-center gap-4 p-4 rounded-xl border', statusColors[record.status])}>
+                <div key={record.id} className={cn('flex items-center gap-4 p-4 rounded-xl border', statusColors[record.status as keyof typeof statusColors] || 'bg-slate-50 dark:bg-slate-900/20 border-slate-200 dark:border-slate-800')}>
                   <StatusIcon className={cn('w-5 h-5 flex-shrink-0', statusColor)} />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm text-gray-900 dark:text-white">{record.courseName}</p>
