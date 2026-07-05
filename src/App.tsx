@@ -114,7 +114,7 @@ const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefin
 export default function App() {
   const wrapped = (
     <ErrorBoundary>
-      <BrowserRouter basename="/must-smartcampus">
+      <BrowserRouter basename={import.meta.env.VITE_NATIVE ? '' : '/must-smartcampus'}>
         <AppProvider>
           <NotificationManager />
           <AppRoutes />
