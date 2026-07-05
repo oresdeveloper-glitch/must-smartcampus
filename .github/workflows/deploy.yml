@@ -89,10 +89,13 @@ jobs:
           echo '{}' > android/app/src/main/assets/capacitor.plugins.json
           echo "Web assets copied to android/app/src/main/assets/public/"
 
+      - name: Generate local.properties
+        shell: bash
+        run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
       - name: Build APK
         shell: bash
         working-directory: ./android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Prepare release assets
         shell: bash
