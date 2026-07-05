@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AppProvider, useApp } from './context/AppContext';
 import SplashScreen from './screens/SplashScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
@@ -107,8 +108,10 @@ function AppRoutes() {
   );
 }
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
 export default function App() {
-  return (
+  const wrapped = (
     <ErrorBoundary>
       <BrowserRouter basename="/must-smartcampus">
         <AppProvider>
@@ -117,4 +120,8 @@ export default function App() {
       </BrowserRouter>
     </ErrorBoundary>
   );
+
+  return googleClientId
+    ? <GoogleOAuthProvider clientId={googleClientId}>{wrapped}</GoogleOAuthProvider>
+    : wrapped;
 }

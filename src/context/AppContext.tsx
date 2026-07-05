@@ -27,6 +27,7 @@ interface AppContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  googleLogin: (credential: string) => Promise<{ success: boolean; error?: string }>;
   signup: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
@@ -231,6 +232,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, []);
 
+  const googleLogin = useCallback(async (credential: string) => {
+    try {
+      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${credential}` },
+      });
+      if (!res.ok) return { success: false, error: 'Google authentication failed.' };
+      const info = await res.json();
+      const email: string = info.email;
+      const name: string = info.name || info.given_name || email.split('@')[0];
+      const avatar: string = info.picture || '';
+
+      const stored = localStorage.getItem(STORAGE_KEYS.USER);
+      if (stored) {
+        const storedUser = safeJSON<User | null>(stored, null);
+        if (storedUser && storedUser.email === email) {
+          setUser({ ...storedUser, avatar: storedUser.avatar || avatar });
+          return { success: true };
+        }
+      }
+
+      const newUser: User = {
+        id: `google-${Date.now()}`,
+        name, email, role: 'student',
+        avatar, department: 'Pending', faculty: 'Pending',
+        studentId: `STU-${Date.now()}`,
+        createdAt: new Date(),
+        verified: true,
+      };
+      setUser(newUser);
+      localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(newUser));
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Google sign-in failed. Please try again.' };
+    }
+  }, []);
+
   const signup = useCallback(async (name: string, email: string, password: string, role: UserRole) => {
     await new Promise(r => setTimeout(r, 800));
     const newUser: User = {
@@ -429,12 +466,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [announcements]);
 
   const value = useMemo<AppContextType>(() => ({
-    user, isAuthenticated: !!user, isLoading, login, signup, logout, switchRole,
+    user, isAuthenticated: !!user, isLoading, login, googleLogin, signup, logout, switchRole,
     darkMode, toggleDarkMode,
     courses, timetable, announcements, notes, assignments, chats, chatMessages, attendanceRecords, notifications, badges, leaderboard, analytics,
     addNotification, markNotificationRead, markAllNotificationsRead, toggleBookmark, submitAssignment, sendMessage, addAnnouncement, markAttendance, addCourse, deleteCourse, addNote, addAssignment, addChat, updateUser,
   }), [
-    user, isLoading, login, signup, logout, switchRole,
+    user, isLoading, login, googleLogin, signup, logout, switchRole,
     darkMode, toggleDarkMode,
     courses, timetable, announcements, notes, assignments, chats, chatMessages, attendanceRecords, notifications, badges, leaderboard, analytics,
     addNotification, markNotificationRead, markAllNotificationsRead, toggleBookmark, submitAssignment, sendMessage, addAnnouncement, markAttendance, addCourse, deleteCourse, addNote, addAssignment, addChat, updateUser,
