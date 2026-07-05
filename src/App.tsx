@@ -110,7 +110,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter basename="/must-smartcampus">
         <AppProvider>
           <AppRoutes />
         </AppProvider>
