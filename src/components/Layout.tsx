@@ -9,7 +9,8 @@ import {
 } from 'lucide-react';
 
 
-const mustLogo = '/images/must logo.jpg';
+import { img } from '@/utils/cn';
+const mustLogo = img('must logo.jpg');
 import { useState, useEffect } from 'react';
 
 interface NavItem {

@@ -1,3 +1,5 @@
+import { img } from '@/utils/cn';
+
 export type MustBackgroundVariant =
   | 'home'
   | 'campus'
@@ -8,11 +10,11 @@ export type MustBackgroundVariant =
 // NOTE: Images live in /public/images, so we reference them as absolute URLs.
 const backgroundByVariant: Record<MustBackgroundVariant, string> = {
   // Map variants to existing assets in /public/images
-  home: '/images/must-pic.jpg',
-  campus: '/images/OIP.jpg',
-  library: '/images/download.jpg',
-  academics: '/images/must-pic (1).jpg',
-  default: '/images/must-pic.jpg',
+  home: img('must-pic.jpg'),
+  campus: img('OIP.jpg'),
+  library: img('download.jpg'),
+  academics: img('must-pic (1).jpg'),
+  default: img('must-pic.jpg'),
 };
 
 /**
@@ -27,7 +29,7 @@ export default function MustPageBackground({
   showWatermark?: boolean;
 }) {
   const backgroundImage = backgroundByVariant[variant] || backgroundByVariant.default;
-  const watermark = '/images/must logo.jpg';
+  const watermark = img('must logo.jpg');
 
   return (
     <>

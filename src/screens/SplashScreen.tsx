@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-const mustLogo = '/images/must logo.jpg';
+import { img } from '@/utils/cn';
+const mustLogo = img('must logo.jpg');
 
 export default function SplashScreen() {
   const navigate = useNavigate();

@@ -4,8 +4,9 @@ import { useApp } from '../context/AppContext';
 import { cn } from '../utils/cn';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight } from 'lucide-react';
 
-const mustLogo = '/images/must logo.jpg';
-const fallbackBg = '/images/must-pic.jpg';
+import { img } from '@/utils/cn';
+const mustLogo = img('must logo.jpg');
+const fallbackBg = img('must-pic.jpg');
 const mustBuilding = fallbackBg;
 
 export default function LoginScreen() {

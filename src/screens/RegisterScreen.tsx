@@ -4,7 +4,8 @@ import { useApp } from '../context/AppContext';
 import type { UserRole } from '../types';
 import { cn } from '../utils/cn';
 
-const mustLogo = '/images/must logo.jpg';
+import { img } from '@/utils/cn';
+const mustLogo = img('must logo.jpg');
 import { Mail, Lock, User, AlertCircle, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 export default function RegisterScreen() {

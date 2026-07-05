@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, BookOpen, MessageSquare, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../utils/cn';
 
-const mustLogo = '/images/must logo.jpg';
+import { img } from '@/utils/cn';
+const mustLogo = img('must logo.jpg');
 
 const slides = [
   {
