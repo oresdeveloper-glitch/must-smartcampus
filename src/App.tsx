@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import SplashScreen from './screens/SplashScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
@@ -41,7 +42,16 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
 
 function AppRoutes() {
   const { user, isLoading } = useApp();
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    const redirect = sessionStorage.getItem('redirect');
+    if (redirect) {
+      sessionStorage.removeItem('redirect');
+      const stripped = redirect.replace(/^\/must-smartcampus/, '');
+      navigate(stripped || '/', { replace: true });
+    }
+  }, [navigate]);
 
   if (isLoading) return <SplashScreen />;
 
@@ -110,7 +120,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter basename="/must-smartcampus">
         <AppProvider>
           <AppRoutes />
         </AppProvider>
