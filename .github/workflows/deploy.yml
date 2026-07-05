@@ -72,8 +72,16 @@ jobs:
         shell: bash
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Build web + copy to Capacitor
-        run: npm run build:android
+      - name: Build web
+        shell: bash
+        run: VITE_NATIVE=true npx vite build --base=./
+      - name: Copy to Capacitor
+        shell: bash
+        run: |
+          rm -rf android/app/src/main/assets/public
+          cp -r dist android/app/src/main/assets/public
+          echo '{"appId":"com.must.smartcampus","appName":"Smart Lecture","webDir":"dist"}' > android/app/src/main/assets/capacitor.config.json
+          echo "Copied web assets to android/app/src/main/assets/"
 
       - name: Build APK
         shell: bash
