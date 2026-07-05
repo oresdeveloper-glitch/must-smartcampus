@@ -94,8 +94,10 @@ jobs:
         run: echo "sdk.dir=$ANDROID_HOME" > android/local.properties
       - name: Build APK
         shell: bash
-        working-directory: ./android
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Prepare release assets
         shell: bash
