@@ -5,7 +5,7 @@ import { cn } from '../utils/cn';
 import { AlertTriangle, Bell, Siren, Megaphone, Send, Clock, X, CheckCircle, Radio } from 'lucide-react';
 
 export default function EmergencyAlertsScreen() {
-  const { user, addAnnouncement, notifications } = useApp();
+  const { user, addAnnouncement, notifications, notify, speak, voiceEnabled } = useApp();
   const [showCompose, setShowCompose] = useState(false);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -17,6 +17,8 @@ export default function EmergencyAlertsScreen() {
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !message) return;
+    notify(title, { body: message, urgency: 'emergency' });
+    if (voiceEnabled) speak(`Emergency alert: ${title}. ${message}`);
     addAnnouncement({
       title,
       message,

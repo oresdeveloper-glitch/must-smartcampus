@@ -26,6 +26,7 @@ import UserManageScreen from './screens/UserManageScreen';
 import CourseManageScreen from './screens/CourseManageScreen';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
+import NotificationManager from './components/NotificationManager';
 
 function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: string[] }) {
   const { user, isLoading } = useApp();
@@ -115,6 +116,7 @@ export default function App() {
     <ErrorBoundary>
       <BrowserRouter basename="/must-smartcampus">
         <AppProvider>
+          <NotificationManager />
           <AppRoutes />
         </AppProvider>
       </BrowserRouter>

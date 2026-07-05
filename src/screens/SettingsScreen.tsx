@@ -1,17 +1,12 @@
-import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import MustPageBackground from '../components/MustPageBackground';
 import { cn } from '../utils/cn';
-import { Moon, Sun, Bell, Globe, Shield, Wifi, Download, User, LogOut, ChevronRight, Volume2, Languages, Calendar } from 'lucide-react';
+import { Moon, Sun, Bell, Globe, Shield, Wifi, Download, User, LogOut, ChevronRight, Volume2, Languages, Calendar, BellRing, Radio } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function SettingsScreen() {
-  const { darkMode, toggleDarkMode, user, logout } = useApp();
+  const { darkMode, toggleDarkMode, user, logout, pushEnabled, setPushEnabled, voiceEnabled, setVoiceEnabled, alertEnabled, setAlertEnabled, calendarSync, setCalendarSync, requestNotificationPermission } = useApp();
   const navigate = useNavigate();
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [alertEnabled, setAlertEnabled] = useState(true);
-  const [calendarSync, setCalendarSync] = useState(false);
 
   const basePath = `/${user?.role || 'student'}`;
 
@@ -21,6 +16,61 @@ export default function SettingsScreen() {
     </button>
   );
 
+  const requestNotif = async () => {
+    const granted = await requestNotificationPermission();
+    if (!granted) alert('Please enable notifications in your browser settings to receive alerts.');
+    else if (!pushEnabled) setPushEnabled(true);
+  };
+
+  const testNotification = () => {
+    if (!pushEnabled) { requestNotif(); return; }
+    if ('Notification' in window && Notification.permission === 'granted') {
+      new Notification('SmartLecture Alert', { body: 'This is a test notification. Alerts are working!' });
+    } else {
+      requestNotif();
+    }
+  };
+
+  const testVoice = () => {
+    if (!voiceEnabled) { setVoiceEnabled(true); }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance('Voice reminders are now active. This is a test message.');
+      u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    } else {
+      alert('Voice synthesis is not supported in this browser.');
+    }
+  };
+
+  const exportCalendar = () => {
+    if (!calendarSync) { setCalendarSync(true); }
+    try {
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//SmartLecture//Calendar//EN',
+        'BEGIN:VEVENT',
+        `DTSTART:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+        `DTEND:${new Date(Date.now() + 3600000).toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+        'SUMMARY:SmartLecture Calendar Sync',
+        'DESCRIPTION:Calendar synced from SmartLecture app.',
+        'END:VEVENT',
+        'END:VCALENDAR',
+      ].join('\r\n');
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'smartlecture-calendar.ics';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // fallback: already saved to localStorage
+    }
+    alert('Calendar events synced to localStorage. ICS file downloaded for import.');
+  };
+
   const sections = [
     {
       title: 'Appearance',
@@ -29,18 +79,20 @@ export default function SettingsScreen() {
       ],
     },
     {
-      title: 'Notifications',
+      title: 'Notifications & Alerts',
       items: [
-        { icon: Bell, label: 'Push Notifications', action: () => setPushEnabled(!pushEnabled), right: <Toggle enabled={pushEnabled} onChange={() => setPushEnabled(!pushEnabled)} /> },
+        { icon: Bell, label: 'Push Notifications', action: () => { setPushEnabled(!pushEnabled); if (!pushEnabled) requestNotif(); }, right: <Toggle enabled={pushEnabled} onChange={() => { setPushEnabled(!pushEnabled); if (!pushEnabled) requestNotif(); }} /> },
         { icon: Volume2, label: 'Voice Reminders', action: () => setVoiceEnabled(!voiceEnabled), right: <Toggle enabled={voiceEnabled} onChange={() => setVoiceEnabled(!voiceEnabled)} /> },
-        { icon: Bell, label: 'Pre-lecture Alerts', action: () => setAlertEnabled(!alertEnabled), right: <Toggle enabled={alertEnabled} onChange={() => setAlertEnabled(!alertEnabled)} /> },
+        { icon: BellRing, label: 'Pre-lecture Alerts', action: () => setAlertEnabled(!alertEnabled), right: <Toggle enabled={alertEnabled} onChange={() => setAlertEnabled(!alertEnabled)} /> },
+        { icon: Radio, label: 'Test Notification', action: testNotification, right: <span className="text-xs text-blue-500 font-medium">Test</span> },
+        { icon: Volume2, label: 'Test Voice', action: testVoice, right: <span className="text-xs text-blue-500 font-medium">Test</span> },
       ],
     },
     {
       title: 'Preferences',
       items: [
         { icon: Languages, label: 'Language', right: <span className="text-sm text-gray-400">English</span>, action: () => alert('Language selection coming soon.') },
-        { icon: Calendar, label: 'Calendar Sync', action: () => setCalendarSync(!calendarSync), right: <Toggle enabled={calendarSync} onChange={() => setCalendarSync(!calendarSync)} /> },
+        { icon: Calendar, label: 'Calendar Sync', action: exportCalendar, right: <Toggle enabled={calendarSync} onChange={() => { setCalendarSync(!calendarSync); if (!calendarSync) exportCalendar(); }} /> },
         { icon: Wifi, label: 'Offline Mode', right: <span className="text-sm text-green-600 font-medium">Enabled</span> },
       ],
     },

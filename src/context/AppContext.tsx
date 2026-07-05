@@ -13,6 +13,11 @@ const STORAGE_KEYS = {
   COURSES: 'smartlecture_courses',
   NOTES: 'smartlecture_notes',
   ASSIGNMENTS: 'smartlecture_assignments',
+  PUSH_ENABLED: 'smartlecture_pushEnabled',
+  VOICE_ENABLED: 'smartlecture_voiceEnabled',
+  ALERT_ENABLED: 'smartlecture_alertEnabled',
+  CALENDAR_SYNC: 'smartlecture_calendarSync',
+  NOTIF_PERMISSION: 'smartlecture_notifPermission',
   CHATS: 'smartlecture_chats',
   CHAT_MESSAGES: 'smartlecture_chatMessages',
   ATTENDANCE: 'smartlecture_attendance',
@@ -48,6 +53,17 @@ interface AppContextType {
   leaderboard: LeaderboardEntry[];
   analytics: AnalyticsData;
 
+  pushEnabled: boolean;
+  voiceEnabled: boolean;
+  alertEnabled: boolean;
+  calendarSync: boolean;
+  setPushEnabled: (v: boolean) => void;
+  setVoiceEnabled: (v: boolean) => void;
+  setAlertEnabled: (v: boolean) => void;
+  setCalendarSync: (v: boolean) => void;
+  requestNotificationPermission: () => Promise<boolean>;
+  notify: (title: string, options?: { body?: string; urgency?: 'normal' | 'emergency' }) => void;
+  speak: (text: string) => void;
   addNotification: (notif: Omit<Notification, 'id' | 'createdAt' | 'read'>) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: () => void;
@@ -200,6 +216,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalStudents: 0, totalLecturers: 0, totalCourses: 0,
     attendanceRate: 0, latenessRate: 0, activeUsers: 0, engagementScore: 0, weeklyTrend: [],
   });
+
+  const [pushEnabled, setPushEnabled] = useState(() => safeJSON<boolean>(localStorage.getItem(STORAGE_KEYS.PUSH_ENABLED), true));
+  const [voiceEnabled, setVoiceEnabled] = useState(() => safeJSON<boolean>(localStorage.getItem(STORAGE_KEYS.VOICE_ENABLED), false));
+  const [alertEnabled, setAlertEnabled] = useState(() => safeJSON<boolean>(localStorage.getItem(STORAGE_KEYS.ALERT_ENABLED), true));
+  const [calendarSync, setCalendarSync] = useState(() => safeJSON<boolean>(localStorage.getItem(STORAGE_KEYS.CALENDAR_SYNC), false));
+
+  const requestNotificationPermission = useCallback(async () => {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    const result = await Notification.requestPermission();
+    return result === 'granted';
+  }, []);
+
+  const notify = useCallback((title: string, options?: { body?: string; urgency?: 'normal' | 'emergency' }) => {
+    if (!pushEnabled && options?.urgency !== 'emergency') return;
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body: options?.body, icon: '/images/must%20logo.jpg' });
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then(p => {
+        if (p === 'granted') new Notification(title, { body: options?.body, icon: '/images/must%20logo.jpg' });
+      });
+    }
+  }, [pushEnabled]);
+
+  const speak = useCallback((text: string) => {
+    if (!voiceEnabled) return;
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  }, [voiceEnabled]);
 
   useEffect(() => {
     setTimetable(buildTimetable(courses));
@@ -393,7 +445,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       actionable: true,
     };
     setNotifications(prev => [newNotif, ...prev]);
-  }, [user]);
+    const isUrgent = announcement.type === 'emergency';
+    notify(announcement.title, { body: announcement.message, urgency: isUrgent ? 'emergency' : 'normal' });
+    if (isUrgent && voiceEnabled) {
+      speak(`Emergency alert: ${announcement.title}. ${announcement.message}`);
+    } else if (voiceEnabled) {
+      speak(`New announcement: ${announcement.title}`);
+    }
+  }, [user, notify, speak, voiceEnabled]);
 
   const markAttendance = useCallback((record: Omit<AttendanceRecord, 'id' | 'date'>) => {
     const newRec: AttendanceRecord = { ...record, id: `at-${Date.now()}`, date: new Date() };
@@ -423,7 +482,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date(),
     };
     setAssignments(prev => [newAssignment, ...prev]);
-  }, []);
+    if (pushEnabled) {
+      const days = Math.ceil((new Date(assignment.deadline).getTime() - Date.now()) / 86400000);
+      const desc = `Due ${days <= 1 ? 'tomorrow' : `in ${days} days`}`;
+      notify(`New Assignment: ${assignment.title}`, { body: `${assignment.courseName} - ${desc}` });
+    }
+  }, [pushEnabled, notify]);
 
   const addChat = useCallback((chat: Omit<Chat, 'id'>, initialMessage?: string) => {
     const newChat: Chat = { ...chat, id: `chat-${Date.now()}` };
@@ -485,15 +549,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENTS, JSON.stringify(announcements));
   }, [announcements]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PUSH_ENABLED, JSON.stringify(pushEnabled));
+  }, [pushEnabled]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.VOICE_ENABLED, JSON.stringify(voiceEnabled));
+  }, [voiceEnabled]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.ALERT_ENABLED, JSON.stringify(alertEnabled));
+  }, [alertEnabled]);
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CALENDAR_SYNC, JSON.stringify(calendarSync));
+  }, [calendarSync]);
+
   const value = useMemo<AppContextType>(() => ({
     user, isAuthenticated: !!user, isLoading, login, googleLogin, signup, logout, switchRole,
     darkMode, toggleDarkMode,
     courses, timetable, announcements, notes, assignments, chats, chatMessages, attendanceRecords, notifications, badges, leaderboard, analytics,
+    pushEnabled, voiceEnabled, alertEnabled, calendarSync,
+    setPushEnabled, setVoiceEnabled, setAlertEnabled, setCalendarSync,
+    requestNotificationPermission, notify, speak,
     addNotification, markNotificationRead, markAllNotificationsRead, toggleBookmark, submitAssignment, sendMessage, addAnnouncement, markAttendance, addCourse, deleteCourse, addNote, addAssignment, addChat, updateUser,
   }), [
     user, isLoading, login, googleLogin, signup, logout, switchRole,
     darkMode, toggleDarkMode,
     courses, timetable, announcements, notes, assignments, chats, chatMessages, attendanceRecords, notifications, badges, leaderboard, analytics,
+    pushEnabled, voiceEnabled, alertEnabled, calendarSync,
+    requestNotificationPermission, notify, speak,
     addNotification, markNotificationRead, markAllNotificationsRead, toggleBookmark, submitAssignment, sendMessage, addAnnouncement, markAttendance, addCourse, deleteCourse, addNote, addAssignment, addChat, updateUser,
   ]);
 
