@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -75,11 +75,26 @@ jobs:
         run: ./gradlew assembleDebug
 
       - name: Rename APK
-        run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk Smart_Lecture_v1.0.0_178326.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Smart_Lecture_v1.0.0_178326
-          path: Smart_Lecture_v1.0.0_178326.apk
+          name: Smart_Lecture_v1.0.0_${{ github.run_number }}
+          path: Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: Smart Lecture v1.0.0 (Build ${{ github.run_number }})
+          body: |
+            ## Smart Lecture v1.0.0 (Build ${{ github.run_number }})
+
+            **Commit:** ${{ github.sha }}
+            **Message:** ${{ github.event.head_commit.message || 'Manual trigger' }}
+
+            ### Download
+            - [Smart_Lecture_v1.0.0_${{ github.run_number }}.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.0-${{ github.run_number }}/Smart_Lecture_v1.0.0_${{ github.run_number }}.apk)
+          files: Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
+          generate_release_notes: true
