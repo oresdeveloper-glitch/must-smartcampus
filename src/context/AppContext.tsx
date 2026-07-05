@@ -234,14 +234,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const googleLogin = useCallback(async (credential: string) => {
     try {
-      const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${credential}` },
-      });
-      if (!res.ok) return { success: false, error: 'Google authentication failed.' };
-      const info = await res.json();
-      const email: string = info.email;
-      const name: string = info.name || info.given_name || email.split('@')[0];
-      const avatar: string = info.picture || '';
+      let email = '';
+      let name = '';
+      let avatar = '';
+
+      if (credential.startsWith('demo-')) {
+        email = atob(credential.replace('demo-', ''));
+        name = email.split('@')[0];
+        avatar = '';
+      } else {
+        const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${credential}` },
+        });
+        if (!res.ok) return { success: false, error: 'Google authentication failed.' };
+        const info = await res.json();
+        email = info.email;
+        name = info.name || info.given_name || email.split('@')[0];
+        avatar = info.picture || '';
+      }
 
       const stored = localStorage.getItem(STORAGE_KEYS.USER);
       if (stored) {
