@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"require('fs').copyFileSync('dist/index.html','dist/404.html')\"",
-    "build:android": "cross-env VITE_NATIVE=true vite build --base=./ && npx cap copy",
+    "build:android": "cross-env VITE_NATIVE=true vite build --base=./ && cap copy",
     "preview": "vite preview"
   },
   "dependencies": {

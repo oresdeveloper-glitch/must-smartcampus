@@ -74,8 +74,13 @@ jobs:
         shell: bash
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Build web + copy to Capacitor
-        run: npm run build:android
+      - name: Build web for Android
+        shell: bash
+        run: npx vite build --base=./
+
+      - name: Copy to Capacitor
+        shell: bash
+        run: ./node_modules/.bin/cap copy
 
       - name: Build APK
         shell: bash
