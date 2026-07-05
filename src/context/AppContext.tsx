@@ -242,6 +242,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         email = atob(credential.replace('demo-', ''));
         name = email.split('@')[0];
         avatar = '';
+      } else if (credential.startsWith('github-')) {
+        const token = credential.replace('github-', '');
+        const res = await fetch('https://api.github.com/user', {
+          headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' },
+        });
+        if (!res.ok) return { success: false, error: 'GitHub authentication failed.' };
+        const info = await res.json();
+        email = info.email || `${info.login}@github.com`;
+        name = info.name || info.login;
+        avatar = info.avatar_url || '';
       } else {
         const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${credential}` },
