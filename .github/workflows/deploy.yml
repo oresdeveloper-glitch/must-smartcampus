@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages + Build APK
+name: 🚀 Deploy Web + Build APK
 
 on:
   push:
@@ -11,8 +11,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   deploy-web:
@@ -39,8 +39,10 @@ jobs:
         uses: actions/deploy-pages@v4
 
   build-apk:
-    name: Build Android APK
+    name: Build & Release Android APK
     runs-on: ubuntu-latest
+    env:
+      VITE_NATIVE: 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -55,14 +57,15 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
+      - name: Setup Android SDK
         shell: bash
         run: |
-          export ANDROID_HOME=/usr/local/lib/android/sdk
-          echo "ANDROID_HOME=/usr/local/lib/android/sdk" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+          SDK=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$SDK" >> $GITHUB_ENV
+          echo "ANDROID_SDK_ROOT=$SDK" >> $GITHUB_ENV
+          echo "$SDK/platform-tools" >> $GITHUB_PATH
+          echo "$SDK/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          yes | $SDK/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
       - name: Add Android platform
         run: npx cap add android
@@ -74,27 +77,27 @@ jobs:
         working-directory: ./android
         run: ./gradlew assembleDebug
 
-      - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/debug/app-debug.apk release/Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
+          echo "### Smart Lecture v1.0.0 (Build ${{ github.run_number }})" > release/notes.md
+          echo "" >> release/notes.md
+          echo "**Commit:** \`${{ github.sha }}\`" >> release/notes.md
+          echo "**Message:** ${{ github.event.head_commit.message || 'Manual trigger' }}" >> release/notes.md
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: Smart_Lecture_v1.0.0_${{ github.run_number }}
-          path: Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
+          path: release/Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
 
-      - name: Create Release
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0-${{ github.run_number }}
           name: Smart Lecture v1.0.0 (Build ${{ github.run_number }})
-          body: |
-            ## Smart Lecture v1.0.0 (Build ${{ github.run_number }})
-
-            **Commit:** ${{ github.sha }}
-            **Message:** ${{ github.event.head_commit.message || 'Manual trigger' }}
-
-            ### Download
-            - [Smart_Lecture_v1.0.0_${{ github.run_number }}.apk](https://github.com/${{ github.repository }}/releases/download/v1.0.0-${{ github.run_number }}/Smart_Lecture_v1.0.0_${{ github.run_number }}.apk)
-          files: Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
+          body_path: release/notes.md
+          files: release/Smart_Lecture_v1.0.0_${{ github.run_number }}.apk
           generate_release_notes: true
+          fail_on_unmatched_files: true

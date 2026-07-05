@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node -e \"require('fs').copyFileSync('dist/index.html','dist/404.html')\"",
-    "build:android": "set VITE_NATIVE=true&& npx vite build --base=./ && npx cap copy",
+    "build:android": "cross-env VITE_NATIVE=true vite build --base=./ && npx cap copy",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -27,6 +27,7 @@
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "5.1.1",
+    "cross-env": "^10.1.0",
     "tailwindcss": "4.1.17",
     "typescript": "5.9.3",
     "vite": "7.3.2"
