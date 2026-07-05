@@ -74,10 +74,6 @@ jobs:
         shell: bash
         run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
 
-      - name: Sync Capacitor
-        shell: bash
-        run: ./node_modules/.bin/cap sync android
-
       - name: Build web + copy to Capacitor
         run: npm run build:android
 
