@@ -4,5 +4,4 @@ dist/
 *.local
 
 dist.zip
-android/
 build-apk.bat
